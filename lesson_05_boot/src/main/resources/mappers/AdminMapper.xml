@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cy.mapper.AdminMapper">
+    <update id="updateAdminRoleById">
+        update cysx_admin
+        set admin_role_id=#{adminVO.personRoleId}
+        where admin_id=#{adminVO.personId}
+    </update>
+    <update id="resetPasswordById">
+        update cysx_admin
+        set admin_password='admin'
+        where admin_id=#{adminId}
+    </update>
+    <update id="startAndStopByAdminId">
+        update cysx_admin
+        set admin_status=#{adminStatus}
+        where admin_id=#{adminId}
+    </update>
+    <update id="updateAdminHeader">
+        update cysx_admin
+        set admin_face = #{headerPath}
+        where admin_id = #{adminId}
+    </update>
+    <update id="startAndStopByCourseId">
+        update cysx_course
+        set course_status=#{courseStatus}
+        where course_id=#{courseId}
+    </update>
+
+
+    <select id="login" resultType="com.cy.pojo.Admin">
+        select  *
+        from cysx_admin
+        where admin_account=#{account}
+          and admin_password=#{password}
+    </select>
+
+    <select id="queryAdmins" resultType="com.cy.pojo.Admin">
+        select *
+        from cysx_admin as admin
+            join cysx_role as role on admin.admin_role_id=role.role_id
+            <where>
+                <if test="adminVO.personName !=null and adminVO.personName!=''">
+                    and admin.admin_nickname like concat('%',#{adminVO.personName},'%')
+                </if>
+                <if test="adminVO.personRole !=null and adminVO.personRole!=''">
+                    and role.role_id=(#{adminVO.personRole})
+                </if>
+                <if test="adminVO.personStatus !=null and adminVO.personStatus!=''">
+                    and admin.admin_status=(#{adminVO.personStatus})
+                </if>
+            </where>
+            limit #{adminVO.currentPage} ,#{adminVO.pageSize}
+    </select>
+
+    <select id="countAdmins" resultType="java.lang.Integer">
+        select count(*)
+        from cysx_admin as admin
+        join cysx_role as role on admin.admin_role_id=role.role_id
+        <where>
+            <if test="adminVO.personName !=null and adminVO.personName!=''">
+                and admin.admin_nickname like concat('%',#{adminVO.personName},'%')
+            </if>
+            <if test="adminVO.personRole !=null and adminVO.personRole!=''">
+                and role.role_id=(#{adminVO.personRole})
+            </if>
+            <if test="adminVO.personStatus !=null and adminVO.personStatus!=''">
+                and admin.admin_status=(#{adminVO.personStatus})
+            </if>
+        </where>
+    </select>
+
+    <select id="queryCourses" resultType="com.cy.pojo.Course">
+        SELECT
+        course_id as courseId,
+        course_name as courseName,
+        course_sort as courseSort,
+        introduction as courseIntroduction,
+        course_price as coursePrice,
+        course_hits as courseHits,
+        course_cover_path as courseCoverPath,
+        course_status as courseStatus,
+        update_time as updateTime
+        FROM cysx_course
+        <where>
+            <if test="courseVO.courseName != null and courseVO.courseName != ''">
+                AND course_name LIKE CONCAT('%', #{courseVO.courseName}, '%')
+            </if>
+            <if test="courseVO.courseSort != null and courseVO.courseSort != ''">
+                AND course_sort = #{courseVO.courseSort}
+            </if>
+            <if test="courseVO.courseStatus != null">
+                AND course_status = #{courseVO.courseStatus}
+            </if>
+        </where>
+        LIMIT #{courseVO.currentPage}, #{courseVO.pageSize}
+    </select>
+
+    <select id="queryAdminById" resultType="com.cy.pojo.Admin">
+        select *
+        from cysx_admin where admin_id = #{adminId};
+
+    </select>
+
+
+
+
+    <insert id="insertAdmin">
+        INSERT INTO cysx_admin (
+            admin_account,
+            admin_password,
+            admin_nickname,
+            admin_role_id,
+            admin_status,
+            admin_face,
+            update_time
+        ) VALUES (
+                     #{adminAccount},
+                     #{adminPassword},
+                     #{adminNickname},
+                     #{adminRoleId},
+                     #{adminStatus},
+                     #{adminFace},
+                     NOW()
+                 )
+    </insert>
+
+    <insert id="insertCourse">
+        INSERT INTO cysx_course (
+        course_name,
+        course_sort,
+        introduction,  <!-- 数据库字段名为 introduction -->
+        course_price,
+        course_cover_path,
+        course_status
+        ) VALUES (
+        #{courseName},
+        #{courseSort},
+        #{courseIntroduction}, <!-- 对应 courseVO 中的 courseIntroduction -->
+        #{coursePrice},
+        #{courseCoverPath},
+        #{courseStatus}
+        )
+    </insert>
+
+    <select id="countCourses" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM cysx_course
+        <where>
+            <if test="courseVO.courseName != null and courseVO.courseName != ''">
+                AND course_name LIKE CONCAT('%', #{courseVO.courseName}, '%')
+            </if>
+            <if test="courseVO.courseSort != null and courseVO.courseSort != ''">
+                AND course_sort = #{courseVO.courseSort}
+            </if>
+            <if test="courseVO.courseStatus != null">
+                AND course_status = #{courseVO.courseStatus}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateCourse">
+        UPDATE cysx_course
+        SET
+            course_name = #{courseName},
+            course_sort = #{courseSort},
+            course_price = #{coursePrice},
+            course_cover_path = #{courseCoverPath}
+        WHERE course_id = #{courseId}
+    </update>
+
+    <update id="toggleCourseStatus">
+        UPDATE cysx_course
+        SET course_status = #{courseStatus}
+        WHERE course_id = #{courseId}
+    </update>
+
+    <select id="getCourseIntroduction" resultType="String">
+        SELECT introduction
+        FROM cysx_course
+        WHERE course_id = #{courseId}
+    </select>
+
+    <select id="queryChapters" resultType="com.cy.pojo.Chapter">
+        SELECT
+        chapter_id as chapterId,
+        chapter_name as chapterName,
+        course_id as courseId,
+        order_id as orderId
+        FROM cysx_chapter
+        <where>
+            <if test="chapterVO.chapterName != null and chapterVO.chapterName != ''">
+                AND chapter_name LIKE CONCAT('%', #{chapterVO.chapterName}, '%')
+            </if>
+        </where>
+        LIMIT #{chapterVO.currentPage}, #{chapterVO.pageSize}
+    </select>
+
+    <select id="countChapters" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM cysx_chapter
+        <where>
+            <if test="chapterVO.chapterName != null and chapterVO.chapterName != ''">
+                AND chapter_name LIKE CONCAT('%', #{chapterVO.chapterName}, '%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertChapter">
+        INSERT INTO cysx_chapter (
+            chapter_name,
+            course_id,
+            order_id
+        ) VALUES (
+                     #{chapterName},
+                     #{courseId},
+                     #{orderId}
+                 )
+    </insert>
+
+    <update id="updateChapter">
+        UPDATE cysx_chapter
+        SET
+            chapter_name = #{chapterName},
+            course_id = #{courseId},
+            order_id = #{orderId}
+        WHERE chapter_id = #{chapterId}
+    </update>
+
+    <delete id="deleteChapter">
+        DELETE FROM cysx_chapter
+        WHERE chapter_id = #{chapterId}
+    </delete>
+
+    <select id="getCourseComments" resultType="com.cy.pojo.CourseComment">
+        SELECT *
+        FROM course_comments
+        WHERE course_id = #{courseId}
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="insertCourseComment">
+        INSERT INTO course_comments (
+            course_id,
+            user_id,
+            content,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{courseId},
+                     #{userId},
+                     #{content},
+                     #{createdAt},
+                     #{updatedAt}
+                 )
+    </insert>
+
+    <!-- 插入点赞记录 -->
+    <insert id="insertCourseLike">
+        INSERT INTO course_likes (
+            course_id,
+            user_id,
+            created_at
+        ) VALUES (
+                     #{courseId},
+                     #{userId},
+                     #{createdAt}
+                 )
+    </insert>
+
+    <!-- 删除点赞记录 -->
+    <delete id="deleteCourseLike">
+        DELETE FROM course_likes
+        WHERE course_id = #{courseId} AND user_id = #{userId}
+    </delete>
+
+    <!-- 检查用户是否点赞过课程 -->
+    <select id="checkCourseLike" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM course_likes
+        WHERE course_id = #{courseId} AND user_id = #{userId}
+    </select>
+
+
+
+</mapper>

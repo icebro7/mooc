@@ -1,0 +1,24 @@
+#端口
+server:
+  port: 8088
+
+#数据源
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/users
+    username: root
+    password: 123456
+
+  #静态资源
+  web:
+    resources:
+      static-locations: file:///D:\upload\
+
+
+#
+mybatis:
+  mapper-locations: classpath:mappers/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
